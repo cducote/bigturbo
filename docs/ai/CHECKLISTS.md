@@ -1,0 +1,223 @@
+# Project Checklists
+
+Stack-specific checklists for Clerk, Stripe, and Next.js to catch common issues.
+
+---
+
+## Clerk Checklist
+
+### Authentication & Middleware
+
+- [ ] **Middleware configured** — `middleware.ts` protects routes correctly
+- [ ] **Public routes explicit** — Only intended routes are public
+- [ ] **API routes protected** — All API routes check auth
+- [ ] **Server components auth** — Use `auth()` from `@clerk/nextjs/server`
+
+### Authorization
+
+- [ ] **Org vs user scope** — Correctly using organization or user context
+- [ ] **Role checks server-side** — Never trust client-side role claims alone
+- [ ] **Permission checks** — Using Clerk's permission system correctly
+- [ ] **JWT claims validated** — Custom claims validated on server
+
+### Common Mistakes to Avoid
+
+```typescript
+// ❌ BAD: Trusting client-provided org ID
+const orgId = request.body.orgId;
+
+// ✅ GOOD: Get org from authenticated session
+const { orgId } = auth();
+```
+
+```typescript
+// ❌ BAD: Client-side only role check
+if (user.publicMetadata.role === 'admin') { ... }
+
+// ✅ GOOD: Server-side role verification
+const { sessionClaims } = auth();
+if (sessionClaims?.metadata?.role === 'admin') { ... }
+```
+
+### Clerk Security Checklist
+
+- [ ] Session tokens validated server-side
+- [ ] Webhook signatures verified (if using Clerk webhooks)
+- [ ] User metadata not blindly trusted
+- [ ] Organization membership verified before data access
+
+---
+
+## Stripe Checklist
+
+### Webhooks (Critical!)
+
+- [ ] **Webhooks are source of truth** — Subscription state comes from webhooks
+- [ ] **Signature verification** — Always verify webhook signatures
+- [ ] **Idempotency** — Handle duplicate webhook events gracefully
+- [ ] **Event ordering** — Handle out-of-order events correctly
+
+### Webhook Signature Verification
+
+```typescript
+// ✅ REQUIRED: Always verify webhook signatures
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = request.headers.get('stripe-signature')!;
+  
+  let event: Stripe.Event;
+  
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (err) {
+    return new Response('Webhook signature verification failed', { status: 400 });
+  }
+  
+  // Process event...
+}
+```
+
+### Payment Security
+
+- [ ] **Server-side price validation** — Never trust client-provided price IDs
+- [ ] **Idempotency keys** — Use for all mutating Stripe API calls
+- [ ] **Customer portal** — Use Stripe's hosted portal for subscription management
+- [ ] **Checkout sessions** — Use Stripe Checkout for payment collection
+
+### Common Mistakes to Avoid
+
+```typescript
+// ❌ BAD: Trusting client-provided price
+const session = await stripe.checkout.sessions.create({
+  line_items: [{ price: request.body.priceId, quantity: 1 }], // DANGEROUS
+});
+
+// ✅ GOOD: Server-side price lookup
+const VALID_PRICES = ['price_xxx', 'price_yyy'];
+const priceId = request.body.priceId;
+if (!VALID_PRICES.includes(priceId)) {
+  throw new Error('Invalid price');
+}
+```
+
+```typescript
+// ❌ BAD: No idempotency key
+await stripe.subscriptions.update(subId, { ... });
+
+// ✅ GOOD: With idempotency key
+await stripe.subscriptions.update(subId, { ... }, {
+  idempotencyKey: `update-${subId}-${Date.now()}`,
+});
+```
+
+### Stripe Integration Checklist
+
+- [ ] Webhook endpoint registered in Stripe dashboard
+- [ ] Webhook secret stored securely (env var)
+- [ ] All relevant events subscribed
+- [ ] Test mode vs live mode handled correctly
+- [ ] Error handling for failed payments
+
+---
+
+## Next.js Checklist
+
+### Server Actions vs Route Handlers
+
+| Use Case | Recommendation |
+|----------|---------------|
+| Form submissions | Server Actions |
+| Data mutations from UI | Server Actions |
+| Third-party webhooks | Route Handlers |
+| External API endpoints | Route Handlers |
+| File uploads | Route Handlers |
+
+### Caching & Revalidation
+
+- [ ] **Cache strategy defined** — Know what's cached and for how long
+- [ ] **Revalidation triggers** — `revalidatePath` / `revalidateTag` on mutations
+- [ ] **Dynamic rendering** — Using `dynamic = 'force-dynamic'` when needed
+- [ ] **Unstable cache** — Using `unstable_cache` for expensive operations
+
+```typescript
+// Revalidate after data mutation
+'use server';
+
+import { revalidatePath } from 'next/cache';
+
+export async function updateProject(id: string, data: ProjectData) {
+  await db.projects.update({ where: { id }, data });
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${id}`);
+}
+```
+
+### Error Handling
+
+- [ ] **Error boundaries** — `error.tsx` at appropriate route levels
+- [ ] **Not found handling** — `not-found.tsx` for 404 states
+- [ ] **Loading states** — `loading.tsx` for Suspense boundaries
+- [ ] **Server action errors** — Return structured errors, don't throw
+
+```typescript
+// ✅ GOOD: Structured error returns from server actions
+'use server';
+
+export async function createProject(data: FormData) {
+  try {
+    const project = await db.projects.create({ ... });
+    return { success: true, data: project };
+  } catch (error) {
+    return { success: false, error: 'Failed to create project' };
+  }
+}
+```
+
+### Environment Variables
+
+| Type | Prefix | Available In |
+|------|--------|-------------|
+| Server-only | (none) | Server Components, Route Handlers, Server Actions |
+| Client-exposed | `NEXT_PUBLIC_` | Client Components, Browser |
+
+- [ ] **Secrets server-only** — No `NEXT_PUBLIC_` for API keys/secrets
+- [ ] **Build-time vs runtime** — Understanding when vars are embedded
+- [ ] **Env validation** — Validate required vars at startup
+
+### Logging & Observability
+
+- [ ] **Structured logging** — JSON logs for production
+- [ ] **No secrets in logs** — PII and secrets filtered
+- [ ] **Error tracking** — Sentry or similar configured
+- [ ] **Request tracing** — Correlation IDs for debugging
+
+---
+
+## Quick Reference Card
+
+### Before Every PR
+
+```markdown
+## Clerk
+- [ ] Auth checked server-side
+- [ ] Org/user scope correct
+- [ ] Middleware protecting routes
+
+## Stripe
+- [ ] Webhook signatures verified
+- [ ] Prices validated server-side
+- [ ] Idempotency keys used
+
+## Next.js
+- [ ] Cache/revalidation strategy clear
+- [ ] Error boundaries in place
+- [ ] Env vars correctly scoped
+```
