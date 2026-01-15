@@ -1,0 +1,97 @@
+'use client';
+
+/**
+ * AgentBadge - Displays an agent name with their unique color.
+ * Used in traces, decision trees, and anywhere agents are referenced.
+ */
+
+// Static color mapping for agents - must match .claude/agents/*.md frontmatter
+const AGENT_COLORS: Record<string, { humanName: string; color: string }> = {
+  'fullstack-developer': { humanName: 'Felix', color: '#8b5cf6' },
+  'api-designer': { humanName: 'Aria', color: '#0ea5e9' },
+  'security-auditor': { humanName: 'Serena', color: '#ef4444' },
+  'code-reviewer': { humanName: 'Cody', color: '#f59e0b' },
+  'dependency-manager': { humanName: 'Derek', color: '#10b981' },
+  'devops-engineer': { humanName: 'Devon', color: '#6366f1' },
+  'documentation-engineer': { humanName: 'Dana', color: '#ec4899' },
+  'qa-expert': { humanName: 'Quinn', color: '#14b8a6' },
+  'refactoring-specialist': { humanName: 'Riley', color: '#f97316' },
+  'sql-pro': { humanName: 'Sage', color: '#84cc16' },
+  'prompt-engineer': { humanName: 'Penny', color: '#a855f7' },
+};
+
+// Default color for unknown agents
+const DEFAULT_COLOR = '#64748b';
+
+export interface AgentBadgeProps {
+  /** Agent ID (e.g., "fullstack-developer") */
+  agentId: string;
+  /** Whether to show the human name instead of the agent ID */
+  showHumanName?: boolean;
+  /** Additional CSS classes */
+  className?: string;
+}
+
+/**
+ * Get agent display info by ID.
+ */
+export function getAgentInfo(agentId: string): { humanName: string; color: string } {
+  const info = AGENT_COLORS[agentId];
+  if (info) {
+    return info;
+  }
+  // Fallback: generate a human-readable name from the ID
+  const humanName = agentId
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+  return { humanName, color: DEFAULT_COLOR };
+}
+
+/**
+ * AgentBadge component - displays an agent with their unique color.
+ */
+export function AgentBadge({ agentId, showHumanName = false, className = '' }: AgentBadgeProps) {
+  const { humanName, color } = getAgentInfo(agentId);
+  const displayName = showHumanName ? humanName : agentId;
+
+  // Calculate contrasting text color (white for dark backgrounds, dark for light)
+  const textColor = getContrastingTextColor(color);
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 border px-2 py-0.5 text-xs font-mono ${className}`}
+      style={{
+        backgroundColor: color + '20', // 12.5% opacity background
+        borderColor: color,
+        color: textColor === 'white' ? color : '#0f172a',
+      }}
+    >
+      <span
+        className="h-2 w-2 flex-shrink-0"
+        style={{ backgroundColor: color }}
+      />
+      {displayName}
+    </span>
+  );
+}
+
+/**
+ * Get a contrasting text color (white or dark) for a given background.
+ */
+function getContrastingTextColor(hexColor: string): 'white' | 'dark' {
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Calculate relative luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.5 ? 'dark' : 'white';
+}
+
+export default AgentBadge;

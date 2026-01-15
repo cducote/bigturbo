@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default app colors */
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* BigTurbo Audit Design System
+   * Engineering-grade, documentation-style UI
+   * Inspired by retro technical specs and API docs
+   */
+
+  /* Backgrounds - warm paper tones */
+  --audit-bg: #fefcf3;           /* Primary background - pale yellow paper */
+  --audit-bg-alt: #fffef5;       /* Alternate/input background - lighter */
+  --audit-bg-accent: #fefce8;    /* Accent background - headers, highlights */
+
+  /* Text colors - navy/slate hierarchy */
+  --audit-text: #0f172a;         /* Primary text - dark navy (ALWAYS readable) */
+  --audit-text-secondary: #1e293b; /* Secondary text - navy */
+  --audit-text-muted: #64748b;   /* Muted text - slate (labels, hints) */
+  --audit-text-subtle: #94a3b8;  /* Subtle text - light slate (placeholders) */
+
+  /* Borders and lines */
+  --audit-border: #1e293b;       /* Primary border - navy */
+  --audit-border-muted: #cbd5e1; /* Muted border - light slate */
+
+  /* Status colors */
+  --audit-success: #10b981;
+  --audit-success-bg: #d1fae5;
+  --audit-success-text: #065f46;
+
+  --audit-warning: #f59e0b;
+  --audit-warning-bg: #fef3c7;
+  --audit-warning-text: #92400e;
+
+  --audit-error: #ef4444;
+  --audit-error-bg: #fee2e2;
+  --audit-error-text: #991b1b;
+
+  --audit-info: #6366f1;
+  --audit-info-bg: #e0e7ff;
+  --audit-info-text: #3730a3;
+}
+
+/* Disable dark mode for now - audit UI is designed for light mode only */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+
+    /* Keep audit colors consistent regardless of system preference */
+    /* This ensures the engineering-doc aesthetic is preserved */
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+/* Audit section overrides - ensure readable text regardless of dark mode */
+.audit-content {
+  color: var(--audit-text);
+  background: var(--audit-bg);
+}
+
+@layer base {
+  /* Ensure pre/code blocks in audit UI have proper colors */
+  .audit-content pre,
+  .audit-content code {
+    color: var(--audit-text);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

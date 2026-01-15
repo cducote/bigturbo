@@ -1,0 +1,51 @@
+# Langfuse Self-Hosted Setup for BigTurbo Agent Audit System
+#
+# Usage:
+#   docker-compose up -d
+#
+# Access Langfuse UI at http://localhost:3001
+# API available at http://localhost:3001/api
+
+version: '3.8'
+
+services:
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: bigturbo-langfuse
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      # Database - Uses NeonDB (external PostgreSQL)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Authentication
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      NEXTAUTH_URL: http://localhost:3001
+
+      # Telemetry (disabled for self-hosted)
+      TELEMETRY_ENABLED: "false"
+
+      # Optional: Salt for API key hashing
+      SALT: ${LANGFUSE_SALT}
+
+      # Encryption key for sensitive data
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+
+      # Disable sign-up after initial setup (single tenant)
+      AUTH_DISABLE_SIGNUP: "false"
+
+      # Enable public access to certain features (for local dev)
+      LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "true"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - bigturbo-network
+
+networks:
+  bigturbo-network:
+    driver: bridge
