@@ -8,6 +8,15 @@ source "$CLAUDE_PROJECT_DIR/.claude/hooks/trace-utils.sh"
 INPUT=$(cat)
 PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty')
 
+# Detect @agent invocation from prompt (e.g., @.claude/agents/refactoring-specialist.md)
+PROMPT_AGENT=""
+if [[ "$PROMPT" =~ @\.claude/agents/([a-zA-Z0-9_-]+)\.md ]]; then
+    PROMPT_AGENT="${BASH_REMATCH[1]}"
+elif [[ "$PROMPT" =~ @([a-zA-Z0-9_-]+) ]]; then
+    # Also match simple @agent-name patterns
+    PROMPT_AGENT="${BASH_REMATCH[1]}"
+fi
+
 # Function to detect agents from command file
 detect_agents() {
     local COMMAND_NAME="$1"
@@ -58,6 +67,14 @@ if [[ "$PROMPT" =~ ^/([a-zA-Z0-9_-]+) ]]; then
     echo "export BIGTURBO_TRACE_START=$(date +%s)" >> "$TRACE_STATE_FILE"
     if [ -n "$DETECTED_AGENTS" ]; then
         echo "export BIGTURBO_AGENTS=\"$DETECTED_AGENTS\"" >> "$TRACE_STATE_FILE"
+    fi
+    # Store prompt-detected agent as primary agent for spans
+    if [ -n "$PROMPT_AGENT" ]; then
+        echo "export BIGTURBO_CURRENT_AGENT=\"$PROMPT_AGENT\"" >> "$TRACE_STATE_FILE"
+    elif [ -n "$DETECTED_AGENTS" ]; then
+        # Use first detected agent as primary
+        PRIMARY_AGENT=$(echo "$DETECTED_AGENTS" | cut -d',' -f1)
+        echo "export BIGTURBO_CURRENT_AGENT=\"$PRIMARY_AGENT\"" >> "$TRACE_STATE_FILE"
     fi
 
     # Also write to CLAUDE_ENV_FILE if available (for compatibility)

@@ -23,9 +23,14 @@ fi
 
 # Read input from stdin (PostToolUse provides tool info)
 INPUT=$(cat)
+
+# DEBUG: Capture what Claude sends to PostToolUse
+DEBUG_FILE="/tmp/debug-posttool-$(date +%s).json"
+echo "$INPUT" > "$DEBUG_FILE"
+
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // .toolName // empty')
 TOOL_INPUT=$(echo "$INPUT" | jq -r '.tool_input // .input // "{}"')
-TOOL_OUTPUT=$(echo "$INPUT" | jq -r '.tool_output // .output // ""')
+TOOL_RESPONSE=$(echo "$INPUT" | jq -c '.tool_response // {}')  # tool_response is the correct field!
 TOOL_USE_ID=$(echo "$INPUT" | jq -r '.tool_use_id // empty')
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty')
 
@@ -39,9 +44,13 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
 
     if [ -n "$RECENT_TRANSCRIPT" ]; then
         # Try to extract any thinking/reasoning before this tool call
-        # Look for text content that precedes the tool use
+        # Look for text content that precedes the tool use, filtering out template noise
         REASONING=$(echo "$RECENT_TRANSCRIPT" | \
             grep -o '"text"[[:space:]]*:[[:space:]]*"[^"]*"' | \
+            grep -v '# Plop' | \
+            grep -v 'Execute the user' | \
+            grep -v 'Traced Conversation' | \
+            grep -v '^"text"[[:space:]]*:[[:space:]]*"use @' | \
             tail -1 | \
             sed 's/.*"text"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | \
             head -c 500 || echo "")
@@ -87,20 +96,20 @@ if [ -n "$TOOL_NAME" ]; then
             ;;
     esac
 
-    # Build metadata with transcript context
+    # Build metadata with transcript context and tool response
     METADATA=$(jq -n \
-        --arg output "$TOOL_OUTPUT" \
+        --argjson response "$TOOL_RESPONSE" \
         --arg reasoning "$REASONING" \
         --arg toolUseId "$TOOL_USE_ID" \
         --arg subagentType "${SUBAGENT_TYPE:-}" \
         --arg taskDescription "${TASK_DESCRIPTION:-}" \
         '{
-            output: $output,
+            toolResponse: $response,
             reasoning: (if $reasoning != "" then $reasoning else null end),
             toolUseId: (if $toolUseId != "" then $toolUseId else null end),
             subagentType: (if $subagentType != "" then $subagentType else null end),
             taskDescription: (if $taskDescription != "" then $taskDescription else null end)
-        } | with_entries(select(.value != null))')
+        } | with_entries(select(.value != null and .value != {}))')
 
     # Build input with task prompt if available
     INPUT_JSON=$(echo "$TOOL_INPUT" | jq '.' 2>/dev/null || echo '{}')
@@ -108,13 +117,14 @@ if [ -n "$TOOL_NAME" ]; then
         INPUT_JSON=$(echo "$INPUT_JSON" | jq --arg prompt "$TASK_PROMPT" '. + {promptPreview: ($prompt | .[0:500])}' 2>/dev/null || echo "$INPUT_JSON")
     fi
 
-    # Create span for this tool call
+    # Create span for this tool call with tool_response as output
     PAYLOAD=$(jq -n \
         --arg traceId "$BIGTURBO_TRACE_ID" \
         --arg name "$TOOL_NAME" \
         --arg operationType "$OPERATION_TYPE" \
         --arg agentName "${BIGTURBO_CURRENT_AGENT:-command}" \
         --argjson input "$INPUT_JSON" \
+        --argjson output "$TOOL_RESPONSE" \
         --argjson metadata "$METADATA" \
         '{
             type: "span.create",
@@ -124,6 +134,7 @@ if [ -n "$TOOL_NAME" ]; then
                 operationType: $operationType,
                 agentName: $agentName,
                 input: $input,
+                output: $output,
                 metadata: $metadata
             }
         }')

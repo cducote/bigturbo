@@ -37,7 +37,6 @@ Every agent must produce a **structured handoff** that includes:
 ### When to pull in `security-auditor`:
 - Any change to authentication or authorization logic
 - Changes to Clerk middleware or org/user permissions
-- Changes to Stripe webhooks or payment flows
 - Any new API endpoint that handles sensitive data
 - Database changes involving PII or tenant boundaries
 

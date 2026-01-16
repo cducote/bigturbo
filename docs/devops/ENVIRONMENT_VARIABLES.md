@@ -236,51 +236,7 @@ CLERK_SECRET_KEY=sk_live_secret789
 
 ```bash
 CLERK_WEBHOOK_SECRET=whsec_abcd1234xyz
-```
 
-### Payment Processing (Stripe)
-
-#### NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-- **Description:** Stripe publishable key (public)
-- **Required:** Future (when payments integrated)
-- **Format:** `pk_test_` or `pk_live_`
-- **Used in:** Client-side Stripe.js
-
-```bash
-# Development
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51Abc123
-
-# Production
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_51Xyz789
-```
-
-#### STRIPE_SECRET_KEY
-- **Description:** Stripe secret key
-- **Required:** Future (when payments integrated)
-- **Format:** `sk_test_` or `sk_live_`
-- **Security:** Keep secret
-- **Used in:** Server-side Stripe API calls
-
-```bash
-# Development
-STRIPE_SECRET_KEY=sk_test_51Abc123
-
-# Production
-STRIPE_SECRET_KEY=sk_live_51Xyz789
-```
-
-#### STRIPE_WEBHOOK_SECRET
-- **Description:** Stripe webhook signing secret
-- **Required:** Future (for webhooks)
-- **Security:** Keep secret
-- **Used in:** Webhook verification
-
-```bash
-# Development
-STRIPE_WEBHOOK_SECRET=whsec_test_abc123
-
-# Production
-STRIPE_WEBHOOK_SECRET=whsec_live_xyz789
 ```
 
 ---
@@ -371,10 +327,6 @@ const envSchema = z.object({
   // Future: Authentication (commented until integrated)
   // NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
   // CLERK_SECRET_KEY: z.string(),
-
-  // Future: Payments (commented until integrated)
-  // NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
-  // STRIPE_SECRET_KEY: z.string(),
 });
 
 export function validateEnv() {

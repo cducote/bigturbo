@@ -76,19 +76,39 @@ complete_trace() {
     local TRACE_ID="$1"
     local STATUS="$2"
     local DURATION_MS="$3"
+    local OUTPUT="${4:-}"  # Optional: Claude's response output
 
-    local PAYLOAD=$(jq -n \
-        --arg id "$TRACE_ID" \
-        --arg status "$STATUS" \
-        --argjson duration "$DURATION_MS" \
-        '{
-            type: "trace.update",
-            payload: {
-                traceId: $id,
-                status: $status,
-                metadata: { durationMs: $duration }
-            }
-        }')
+    # Build payload with optional output field
+    local PAYLOAD
+    if [ -n "$OUTPUT" ]; then
+        PAYLOAD=$(jq -n \
+            --arg id "$TRACE_ID" \
+            --arg status "$STATUS" \
+            --argjson duration "$DURATION_MS" \
+            --arg output "$OUTPUT" \
+            '{
+                type: "trace.update",
+                payload: {
+                    traceId: $id,
+                    status: $status,
+                    output: $output,
+                    metadata: { durationMs: $duration }
+                }
+            }')
+    else
+        PAYLOAD=$(jq -n \
+            --arg id "$TRACE_ID" \
+            --arg status "$STATUS" \
+            --argjson duration "$DURATION_MS" \
+            '{
+                type: "trace.update",
+                payload: {
+                    traceId: $id,
+                    status: $status,
+                    metadata: { durationMs: $duration }
+                }
+            }')
+    fi
 
     curl -s -X POST "$INGEST_URL" \
         -H "Content-Type: application/json" \

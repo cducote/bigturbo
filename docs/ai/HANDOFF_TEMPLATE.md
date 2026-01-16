@@ -28,7 +28,6 @@ Done means:
 **Stack:**
 - Next.js (App Router)
 - Neon/Postgres (database)
-- Stripe (payments)
 - Clerk (auth)
 
 **Product/UX Constraints:**
@@ -50,13 +49,6 @@ Done means:
 | Method | Path / Action | Purpose |
 |--------|--------------|---------|
 | | | |
-
-### Stripe Objects Involved
-- [ ] Customer
-- [ ] Subscription
-- [ ] Checkout Session
-- [ ] Payment Intent
-- [ ] Webhooks: `event.type`
 
 ### Clerk Concepts Involved
 - [ ] Organizations
@@ -139,7 +131,6 @@ Done means:
 ## Design Notes
 **Data:** 
 **API:** 
-**Stripe:** 
 **Clerk:** 
 
 ## Implementation Steps

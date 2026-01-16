@@ -79,6 +79,10 @@ function validateCreateSpan(payload: CreateSpanPayload): string[] {
     'validation',
     'handoff',
     'custom',
+    'subagent_launch',
+    'subagent_completion',
+    'command_execution',
+    'planning',
   ];
 
   if (!validOperationTypes.includes(payload.operationType)) {
@@ -148,7 +152,14 @@ export async function processEvent(event: IngestEvent): Promise<IngestResponse> 
         if (errors.length > 0) {
           return { success: false, errors };
         }
-        const trace = await updateTrace(event.payload);
+        
+        // Normalize output: if it's a string, wrap in an object for consistent storage
+        const payload = { ...event.payload };
+        if (typeof payload.output === 'string') {
+          payload.output = { response: payload.output };
+        }
+        
+        const trace = await updateTrace(payload);
         if (!trace) {
           return { success: false, errors: ['Trace not found'] };
         }

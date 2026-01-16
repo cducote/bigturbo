@@ -216,11 +216,6 @@ Quality gates between phases:
 - [ ] Org/user scope correct
 - [ ] Middleware protecting routes
 
-### Stripe (Payments)
-- [ ] Webhook signatures verified
-- [ ] Prices validated server-side
-- [ ] Idempotency keys used
-
 ### Next.js
 - [ ] Cache/revalidation strategy clear
 - [ ] Error boundaries in place

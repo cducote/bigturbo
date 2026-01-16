@@ -51,14 +51,13 @@ docs/ai/
 ├── AGENT_CHARTER.md    # Agent ownership & rules
 ├── HANDOFF_TEMPLATE.md # Standard handoff format
 ├── WORKFLOWS.md        # Detailed workflow definitions
-└── CHECKLISTS.md       # Clerk/Stripe/Next.js checklists
+└── CHECKLISTS.md       # Clerk/Next.js checklists
 ```
 
 ## Stack
 
 - **Next.js** (App Router) — React framework
 - **Neon/Postgres** — Serverless Postgres database
-- **Stripe** — Payments and subscriptions
 - **Clerk** — Authentication and user management
 
 ## Documentation
