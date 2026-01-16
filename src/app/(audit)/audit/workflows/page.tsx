@@ -1,4 +1,4 @@
-import { WorkflowDiagram } from '@/components/audit';
+import { WorkflowsClient } from '@/components/audit';
 import type { WorkflowData } from '@/components/audit/WorkflowDiagram';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +34,7 @@ async function getWorkflows(): Promise<WorkflowData[]> {
 
     // Transform API workflow to WorkflowData format
     return apiWorkflows.map((w) => ({
+      id: w.id,
       name: w.name,
       description: w.description,
       agents: w.agents,
@@ -57,28 +58,7 @@ export default async function WorkflowsPage() {
         </p>
       </header>
 
-      {workflows.length === 0 ? (
-        <div className="border border-[#1e293b] p-8 text-center">
-          <p className="text-[#1e293b]/70">No workflows found</p>
-          <p className="text-xs text-[#1e293b]/50 mt-2">
-            Workflows are extracted from command files that define agent sequences
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="mb-4">
-            <p className="text-xs text-[#1e293b]/50">
-              {workflows.length} workflow{workflows.length !== 1 ? 's' : ''} defined
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {workflows.map((workflow, index) => (
-              <WorkflowDiagram key={`${workflow.name}-${index}`} workflow={workflow} />
-            ))}
-          </div>
-        </>
-      )}
+      <WorkflowsClient workflows={workflows} />
     </div>
   );
 }

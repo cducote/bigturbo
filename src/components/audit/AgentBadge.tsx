@@ -5,8 +5,22 @@
  * Used in traces, decision trees, and anywhere agents are referenced.
  */
 
+// Agent styling configuration
+interface AgentStyle {
+  humanName: string;
+  color: string;
+  background?: string; // 'transparent' or a color value
+  borderGradient?: string; // CSS gradient for border (e.g., "linear-gradient(...)")
+}
+
 // Static color mapping for agents - must match .claude/agents/*.md frontmatter
-const AGENT_COLORS: Record<string, { humanName: string; color: string }> = {
+const AGENT_COLORS: Record<string, AgentStyle> = {
+  'orchestrator': {
+    humanName: 'Oscar',
+    color: '#000000',
+    background: 'transparent',
+    borderGradient: 'linear-gradient(135deg, #ff0080, #ff8c00, #40e0d0, #7b68ee, #ff0080)',
+  },
   'fullstack-developer': { humanName: 'Felix', color: '#8b5cf6' },
   'api-designer': { humanName: 'Aria', color: '#0ea5e9' },
   'security-auditor': { humanName: 'Serena', color: '#ef4444' },
@@ -35,7 +49,7 @@ export interface AgentBadgeProps {
 /**
  * Get agent display info by ID.
  */
-export function getAgentInfo(agentId: string): { humanName: string; color: string } {
+export function getAgentInfo(agentId: string): AgentStyle {
   const info = AGENT_COLORS[agentId];
   if (info) {
     return info;
@@ -52,17 +66,43 @@ export function getAgentInfo(agentId: string): { humanName: string; color: strin
  * AgentBadge component - displays an agent with their unique color.
  */
 export function AgentBadge({ agentId, showHumanName = false, className = '' }: AgentBadgeProps) {
-  const { humanName, color } = getAgentInfo(agentId);
+  const { humanName, color, background, borderGradient } = getAgentInfo(agentId);
   const displayName = showHumanName ? humanName : agentId;
 
   // Calculate contrasting text color (white for dark backgrounds, dark for light)
   const textColor = getContrastingTextColor(color);
 
+  // Handle gradient border styling using border-image
+  if (borderGradient) {
+    const bgColor = background === 'transparent' ? 'transparent' : (background || color + '20');
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-mono ${className}`}
+        style={{
+          backgroundColor: bgColor,
+          border: '1px solid transparent',
+          borderImage: `${borderGradient} 1`,
+          color: color,
+        }}
+      >
+        {/* Gradient dot indicator */}
+        <span
+          className="h-2 w-2 flex-shrink-0"
+          style={{
+            background: borderGradient,
+          }}
+        />
+        {displayName}
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-1.5 border px-2 py-0.5 text-xs font-mono ${className}`}
       style={{
-        backgroundColor: color + '20', // 12.5% opacity background
+        backgroundColor: background === 'transparent' ? 'transparent' : (background || color + '20'),
         borderColor: color,
         color: textColor === 'white' ? color : '#0f172a',
       }}

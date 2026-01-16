@@ -21,162 +21,129 @@ Use this command for **fast, focused work** with 1-5 agents running in parallel.
 
 ---
 
-## How It Works
-
-1. **User selects agents** - Pick 1-5 agents from the team
-2. **User provides focus notes** - Custom instructions for each agent
-3. **Agents run in parallel** - All selected agents work simultaneously
-4. **Quick results** - No heavy handoffs, just get it done
-
----
-
-## Available Agents
-
-Choose from these specialized agents:
-
-| Agent | Use For |
-|-------|---------|
-| **fullstack-developer** | Implement features, fix code, build components |
-| **api-designer** | Design API contracts, plan architecture |
-| **sql-pro** | Database queries, schema changes, optimization |
-| **code-reviewer** | Review code quality, security, best practices |
-| **qa-expert** | Write tests, create test plans, verify quality |
-| **security-auditor** | Security review, vulnerability scanning |
-| **devops-engineer** | Deployment, CI/CD, monitoring setup |
-| **dependency-manager** | Package updates, dependency audits |
-| **documentation-engineer** | Write docs, improve clarity, API documentation |
-| **refactoring-specialist** | Code cleanup, pattern improvements |
-| **prompt-engineer** | Optimize AI prompts, improve agent definitions |
-
----
-
-## Instructions
-
-### Step 1: Select Agents (1-5 maximum)
-
-Which agents do you need? (You can select up to 5)
-
-- [ ] fullstack-developer
-- [ ] api-designer
-- [ ] sql-pro
-- [ ] code-reviewer
-- [ ] qa-expert
-- [ ] security-auditor
-- [ ] devops-engineer
-- [ ] dependency-manager
-- [ ] documentation-engineer
-- [ ] refactoring-specialist
-- [ ] prompt-engineer
-
-### Step 2: Provide Focus Notes
-
-For each selected agent, provide specific instructions:
-
-**Example Format:**
-```
-Agent: code-reviewer
-Focus: Review the authentication middleware in src/middleware.ts for security issues
-
-Agent: security-auditor
-Focus: Audit the Stripe webhook handler for signature verification and idempotency
-```
-
-### Step 3: Execution
-
-I will:
-1. Launch all selected agents **in parallel** using multiple Task tool calls in a single message
-2. Each agent receives ONLY their specific focus instructions
-3. Agents work independently and simultaneously
-4. Return all results to you when complete
-
----
-
-## Example Usage
-
-### Example 1: Quick Component Fix
-
-**Selected Agents:** fullstack-developer
-
-**Focus:**
-- fullstack-developer: Add loading state to the Button component in src/components/ui/Button.tsx
-
-**Result:** One agent, quick fix, done in 5 minutes
-
----
-
-### Example 2: Security Review
-
-**Selected Agents:** code-reviewer, security-auditor
-
-**Focus:**
-- code-reviewer: Review error handling patterns in src/app/api/*
-- security-auditor: Check for SQL injection vulnerabilities and input validation
-
-**Result:** Two agents run in parallel, comprehensive security assessment
-
----
-
-### Example 3: Full Stack Enhancement
-
-**Selected Agents:** api-designer, fullstack-developer, qa-expert
-
-**Focus:**
-- api-designer: Design API contract for user profile update endpoint
-- fullstack-developer: Implement the user profile update feature based on API design
-- qa-expert: Write integration tests for the profile update flow
-
-**Result:** Three agents collaborate in parallel, feature delivered end-to-end
-
----
-
-### Example 4: Documentation Sprint
-
-**Selected Agents:** documentation-engineer, code-reviewer
-
-**Focus:**
-- documentation-engineer: Create API documentation for all routes in src/app/api/
-- code-reviewer: Review inline code comments and add missing JSDoc
-
-**Result:** Documentation improved across codebase simultaneously
-
----
-
-### Example 5: Optimization Pass
-
-**Selected Agents:** sql-pro, devops-engineer, refactoring-specialist
-
-**Focus:**
-- sql-pro: Optimize the user query in src/lib/db/users.ts
-- devops-engineer: Add performance monitoring to production deployment
-- refactoring-specialist: Clean up repeated code patterns in src/components/
-
-**Result:** Multiple optimization improvements in parallel
-
----
-
 ## Workflow
 
 ```
 User runs /spot
     ↓
-Select 1-5 agents
+Step 1: Select agents (AskUserQuestion with multiSelect)
     ↓
-Provide focus notes for each
+Step 2: Answer templated questions about the change
     ↓
-Claude launches all agents in PARALLEL
+Step 3: Orchestrator crafts implementation plan
     ↓
-Agents work independently
+Step 4: Agents execute in parallel
     ↓
-All results returned to user
+Results returned to user
     ↓
 Done!
 ```
 
 ---
 
+## Step 1: Agent Selection
+
+**REQUIRED**: Use `AskUserQuestion` tool with `multiSelect: true` to present agent options.
+
+```json
+{
+  "questions": [{
+    "question": "Which agents do you want to work on this task? (Select 1-5)",
+    "header": "Agents",
+    "multiSelect": true,
+    "options": [
+      {"label": "fullstack-developer", "description": "Implement features, fix code, build components"},
+      {"label": "api-designer", "description": "Design API contracts, plan architecture"},
+      {"label": "sql-pro", "description": "Database queries, schema changes, optimization"},
+      {"label": "code-reviewer", "description": "Review code quality, security, best practices"}
+    ]
+  }]
+}
+```
+
+**Note**: Due to 4-option limit, ask follow-up questions for remaining agents if user selects "Other":
+- qa-expert, security-auditor, devops-engineer
+- dependency-manager, documentation-engineer, refactoring-specialist, prompt-engineer
+
+---
+
+## Step 2: Templated Questions
+
+After agent selection, ask these questions using `AskUserQuestion`:
+
+### Question Set
+
+1. **What type of change is this?**
+   - Options: New functionality, Bug fix, Refactor, Documentation, Performance, Security
+
+2. **What area of the codebase does this affect?**
+   - Options: Frontend (UI/components), Backend (API/server), Database, Infrastructure, Multiple areas
+
+3. **Describe the change in one sentence:**
+   - Free text input (user selects "Other")
+
+4. **What files or components are involved?** (if known)
+   - Free text input (user selects "Other")
+
+---
+
+## Step 3: Orchestrator Creates Implementation Plan
+
+After gathering answers, invoke the **orchestrator** agent via Task tool:
+
+```
+Prompt to orchestrator:
+"Based on the following user requirements, create a focused implementation plan for the selected agents:
+
+Selected Agents: [list from Step 1]
+Change Type: [answer 1]
+Affected Area: [answer 2]
+Description: [answer 3]
+Files/Components: [answer 4]
+
+Create a brief implementation plan with:
+1. Scope - What exactly needs to be done
+2. Agent assignments - What each selected agent should focus on
+3. File targets - Which files will be touched
+4. Success criteria - How we know it's done
+
+IMPORTANT: If you need clarification on any aspect, do NOT ask the user. Instead, consult the appropriate agent from .claude/agents/ and use their recommendation. Document any decisions made this way in the plan."
+```
+
+---
+
+## Step 4: Parallel Execution
+
+Launch all selected agents **in parallel** using multiple Task tool calls in a single message.
+
+Each agent receives:
+- Their specific assignment from the orchestrator's plan
+- Relevant context and file paths
+- Success criteria for their portion
+
+---
+
+## Clarification Protocol
+
+**CRITICAL**: When clarification is needed during planning:
+
+1. **Do NOT** ask the user
+2. **Instead**, consult the most relevant agent in `.claude/agents/`:
+   - Technical decisions → `fullstack-developer` or `api-designer`
+   - Security concerns → `security-auditor`
+   - Testing approach → `qa-expert`
+   - Database choices → `sql-pro`
+   - Code quality → `code-reviewer`
+   - Infrastructure → `devops-engineer`
+   - Documentation → `documentation-engineer`
+3. **Document** the agent consulted and their recommendation in the plan
+4. **Proceed** with the agent's decision
+
+---
+
 ## Output Format
 
-Each agent will provide a brief report:
+Each agent provides a brief report:
 
 **Agent: [name]**
 - **Summary:** What was done
@@ -186,33 +153,43 @@ Each agent will provide a brief report:
 
 ---
 
+## Example Flow
+
+### User runs `/spot`
+
+**Step 1 - Agent Selection:**
+```
+Claude uses AskUserQuestion:
+"Which agents do you want?" [multiSelect: true]
+User selects: code-reviewer, security-auditor
+```
+
+**Step 2 - Templated Questions:**
+```
+Claude asks:
+- Change type? → "Security"
+- Affected area? → "Backend (API/server)"
+- Description? → "Review auth middleware for vulnerabilities"
+- Files? → "src/middleware.ts, src/app/api/*"
+```
+
+**Step 3 - Orchestrator Plans:**
+```
+Orchestrator creates plan:
+- code-reviewer: Review error handling and input validation
+- security-auditor: Check for OWASP vulnerabilities, auth bypass
+```
+
+**Step 4 - Parallel Execution:**
+```
+Both agents run simultaneously, return results
+```
+
+---
+
 ## Tips
 
-- **Be specific** - Clear focus notes = better results
-- **Parallel > Sequential** - Select multiple agents to save time
-- **No dependencies** - Agents work independently, avoid tasks that depend on each other
-- **Keep it focused** - For complex work, use `/feature` instead
-- **Use liberally** - This is your fast-track tool for everyday work
-
----
-
-## When to Escalate to `/feature`
-
-If you find yourself needing:
-- More than 5 agents
-- Heavy coordination between agents
-- Full QA, security review, and deployment pipeline
-- Comprehensive documentation
-- Complex multi-step workflows
-
-→ Use `/feature` instead for full production workflow
-
----
-
-## Ready?
-
-Tell me:
-1. Which agents you want (1-5)
-2. Focus notes for each agent
-
-I'll launch them all in parallel and return results quickly!
+- **Be specific** in your description for better plans
+- **Select relevant agents** - quality over quantity
+- **Trust agent decisions** - they're consulted for clarification
+- **Keep it focused** - for complex work, use `/feature` instead

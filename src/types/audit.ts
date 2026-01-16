@@ -143,3 +143,67 @@ export interface AgentsQueryParams {
   /** Offset for pagination */
   offset?: number;
 }
+
+// ============================================================================
+// Workflow Launch Types
+// ============================================================================
+
+/**
+ * Represents an option within a workflow question.
+ */
+export interface WorkflowQuestionOption {
+  /** Display label for the option */
+  label: string;
+  /** Detailed description of what this option means */
+  description: string;
+}
+
+/**
+ * Represents a question asked during workflow configuration.
+ */
+export interface WorkflowQuestion {
+  /** Unique identifier for this question */
+  id: string;
+  /** The question text to display */
+  question: string;
+  /** Header/title for the question section */
+  header: string;
+  /** Whether multiple options can be selected */
+  multiSelect: boolean;
+  /** Available options for this question */
+  options: WorkflowQuestionOption[];
+}
+
+/**
+ * Represents a user's answer to a workflow question.
+ */
+export interface WorkflowAnswer {
+  /** ID of the question being answered */
+  questionId: string;
+  /** Labels of the selected options */
+  selectedOptions: string[];
+  /** Optional custom text input from the user */
+  customText?: string;
+}
+
+/**
+ * Request payload for launching a workflow.
+ */
+export interface WorkflowLaunchRequest {
+  /** ID of the workflow to launch */
+  workflowId: string;
+  /** User's answers to configuration questions */
+  answers: WorkflowAnswer[];
+}
+
+/**
+ * Response from workflow launch generation.
+ */
+export interface WorkflowLaunchResponse {
+  /** The command to execute (e.g., claude code command) */
+  command: string;
+  /** Generated prompt incorporating user's answers */
+  prompt: string;
+  /** Text formatted for easy copy-paste by the user */
+  copyableText: string;
+}

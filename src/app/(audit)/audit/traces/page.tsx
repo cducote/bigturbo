@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { TraceList } from '@/components/audit/TraceList';
 import { ExportPanel } from '@/components/audit/ExportPanel';
 import type { LangfuseTrace } from '@/lib/langfuse';
@@ -120,8 +120,14 @@ export default function TracesPage() {
     failed: 0,
   });
 
-  // Fetch traces
-  const fetchTraces = async (append = false) => {
+  const [isLive, setIsLive] = useState(false);
+
+  // Track current traces length for append mode
+  const tracesLengthRef = useRef(0);
+  tracesLengthRef.current = traces.length;
+
+  // Fetch traces - wrapped in useCallback with proper dependencies
+  const fetchTraces = useCallback(async (append = false) => {
     setIsLoading(true);
     setError(null);
 
@@ -131,7 +137,7 @@ export default function TracesPage() {
       if (filters.search) params.set('search', filters.search);
       if (filters.agentName) params.set('agentName', filters.agentName);
       params.set('limit', '50');
-      if (append) params.set('offset', String(traces.length));
+      if (append) params.set('offset', String(tracesLengthRef.current));
 
       const response = await fetch(`/api/audit/traces?${params}`);
       if (!response.ok) {
@@ -166,7 +172,7 @@ export default function TracesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters.status, filters.search, filters.agentName]);
 
   // Initial fetch and refetch on filter change
   useEffect(() => {
@@ -175,7 +181,38 @@ export default function TracesPage() {
     }, 300); // Debounce
 
     return () => clearTimeout(timeout);
-  }, [filters.status, filters.search, filters.agentName]);
+  }, [fetchTraces]);
+
+  // SSE connection for live updates
+  useEffect(() => {
+    if (!isLive) return;
+
+    const eventSource = new EventSource('/api/audit/traces/stream');
+
+    eventSource.onopen = () => {
+      console.log('SSE connected');
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'update' && data.latestTraces) {
+          // Refresh traces when we get an update
+          fetchTraces();
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.log('SSE error, reconnecting...');
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [isLive, fetchTraces]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -191,17 +228,37 @@ export default function TracesPage() {
       <div className="border-b border-[#1e293b] bg-[#fefcf3] px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-mono text-2xl font-bold text-[#0f172a]">traces</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="font-mono text-2xl font-bold text-[#0f172a]">traces</h1>
+              {isLive && (
+                <span className="flex items-center gap-1.5 border border-[#10b981] bg-[#d1fae5] px-2 py-0.5 text-xs text-[#065f46]">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-[#10b981]" />
+                  live
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-[#64748b]">
               Agent execution traces and conversation logs
             </p>
           </div>
-          <button
-            onClick={() => setShowExport(!showExport)}
-            className="border border-[#1e293b] bg-[#fffef5] px-4 py-2 font-mono text-sm text-[#0f172a] hover:bg-[#fefce8]"
-          >
-            {showExport ? 'hide export' : 'export data'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsLive(!isLive)}
+              className={`border px-4 py-2 font-mono text-sm ${
+                isLive
+                  ? 'border-[#10b981] bg-[#d1fae5] text-[#065f46]'
+                  : 'border-[#1e293b] bg-[#fffef5] text-[#0f172a] hover:bg-[#fefce8]'
+              }`}
+            >
+              {isLive ? 'live on' : 'go live'}
+            </button>
+            <button
+              onClick={() => setShowExport(!showExport)}
+              className="border border-[#1e293b] bg-[#fffef5] px-4 py-2 font-mono text-sm text-[#0f172a] hover:bg-[#fefce8]"
+            >
+              {showExport ? 'hide export' : 'export data'}
+            </button>
+          </div>
         </div>
       </div>
 

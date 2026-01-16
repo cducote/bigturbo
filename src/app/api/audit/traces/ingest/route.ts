@@ -3,9 +3,10 @@
  *
  * Webhook endpoint for ingesting trace and span events.
  * Supports both single events and batch ingestion.
+ * Compatible with Claude Code hooks for automatic command tracing.
  *
  * Headers:
- *   - X-Webhook-Secret: Webhook authentication secret (required)
+ *   - X-Webhook-Secret: Webhook authentication secret (required in production)
  *   - Content-Type: application/json
  *
  * Request Body (single event):
@@ -13,6 +14,16 @@
  *     "type": "trace.create" | "trace.update" | "span.create" | "span.update",
  *     "payload": { ... }
  *   }
+ *
+ * Hook Event Types:
+ *
+ *   trace.create - Creates a new trace (e.g., on command start)
+ *     Input:  { type: "trace.create", payload: { name, agentName, commandName, input } }
+ *     Output: { success: true, traceId: "tr-xxx" }
+ *
+ *   trace.update - Updates an existing trace (e.g., on command completion)
+ *     Input:  { type: "trace.update", payload: { traceId, status, durationMs?, metadata? } }
+ *     Output: { success: true }
  *
  * Request Body (batch):
  *   {

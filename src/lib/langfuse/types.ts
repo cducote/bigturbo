@@ -31,6 +31,10 @@ export type OperationType =
   | 'search'
   | 'validation'
   | 'handoff'
+  | 'subagent_launch'
+  | 'subagent_completion'
+  | 'command_execution'
+  | 'planning'
   | 'custom';
 
 /**
@@ -229,6 +233,8 @@ export interface CreateSpanPayload {
   agentName: string;
   /** Input to the operation */
   input?: Record<string, unknown>;
+  /** Output from the operation (for immediate completion) */
+  output?: string | Record<string, unknown>;
   /** Metadata */
   metadata?: Record<string, unknown>;
 }
@@ -245,6 +251,8 @@ export interface UpdateTracePayload {
   output?: Record<string, unknown>;
   /** Error message */
   error?: string;
+  /** Duration in milliseconds */
+  durationMs?: number;
   /** Total tokens used */
   totalTokens?: number;
   /** Total cost */

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import { TraceViewer } from '@/components/audit/TraceViewer';
 import { DecisionTree } from '@/components/audit/DecisionTree';
@@ -123,7 +123,7 @@ export default function TraceDetailPage({ params }: TraceDetailPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'viewer' | 'decisions'>('viewer');
 
-  const fetchTrace = async () => {
+  const fetchTrace = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -146,11 +146,11 @@ export default function TraceDetailPage({ params }: TraceDetailPageProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchTrace();
-  }, [id]);
+  }, [fetchTrace]);
 
   // Calculate decision count
   const decisionCount = trace?.spans?.reduce(

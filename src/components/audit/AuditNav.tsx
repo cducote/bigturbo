@@ -12,6 +12,8 @@ const navItems: NavItem[] = [
   { href: '/audit', label: 'Dashboard' },
   { href: '/audit/agents', label: 'Agents' },
   { href: '/audit/workflows', label: 'Workflows' },
+  { href: '/audit/traces', label: 'Traces' },
+  { href: '/audit/metrics', label: 'Metrics' },
   { href: '/audit/prompts', label: 'Prompts' },
 ];
 
@@ -28,9 +30,11 @@ export function AuditNav() {
   return (
     <nav className="w-48 border-r border-[#1e293b] bg-[#fefcf3] font-mono">
       <div className="p-4">
-        <div className="mb-4 border-b border-[#1e293b] pb-2">
-          <span className="text-xs text-[#1e293b] opacity-60">BigTurbo</span>
-          <h2 className="text-sm font-bold text-[#0f172a]">Agent Audit</h2>
+        <div className="mb-4 border-b border-[#1e293b] pb-3">
+          <div className="text-xl font-black tracking-tight text-[#0f172a]">
+            BigTurbo
+          </div>
+          <div className="text-xs text-[#1e293b] opacity-70 mt-0.5">Agent Audit</div>
         </div>
 
         <ul className="space-y-1">

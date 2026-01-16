@@ -217,22 +217,113 @@ function extractCommandDescription(content: string): string {
 
 /**
  * Extract workflow steps from command content.
+ * Handles multiple markdown formats with intelligent prioritization:
+ * - Priority 1: Numbered list "1. **agent-name** -> action" (bugfix, maintenance, migration)
+ * - Priority 2: Standard Flow section (feature.md)
+ * - Priority 3: ASCII diagram "Step N: description" (spot.md, feature.md fallback)
+ *
+ * The function uses a tiered approach: if high-priority agent-based steps are found,
+ * it skips lower-priority fallback patterns to avoid duplicates.
  *
  * @param content - Markdown content
  * @returns Array of workflow step strings
  */
 function extractWorkflowSteps(content: string): string[] {
   const steps: string[] = [];
+  const seenSteps = new Set<string>();
+  const seenAgents = new Set<string>();
 
-  // Look for numbered workflow section
-  const workflowMatch = content.match(/##\s*Workflow[\s\S]*?(?=##|$)/i);
-  if (workflowMatch) {
-    // Extract numbered steps: "1. **agent-name** -> action" or "1. **agent-name** : action"
-    // Also handles Unicode arrow character
-    const stepPattern = /\d+\.\s*\*\*([^*]+)\*\*\s*(?:->|:|->|\u2192)\s*([^\n]+)/g;
-    let match;
-    while ((match = stepPattern.exec(workflowMatch[0])) !== null) {
-      steps.push(`${match[1].trim()}: ${match[2].trim()}`);
+  /**
+   * Add a step if it's not a duplicate
+   */
+  const addStep = (step: string): void => {
+    const normalized = step.toLowerCase().trim();
+    if (!seenSteps.has(normalized) && step.length > 0) {
+      seenSteps.add(normalized);
+      steps.push(step);
+    }
+  };
+
+  /**
+   * Track agent+action combination to allow same agent with different actions
+   * (e.g., qa-expert appears twice in bugfix workflow with different actions)
+   */
+  const trackAgentAction = (agent: string, action: string): boolean => {
+    const normalized = `${agent.toLowerCase().trim()}::${action.toLowerCase().trim()}`;
+    if (seenAgents.has(normalized)) return false;
+    seenAgents.add(normalized);
+    return true;
+  };
+
+  let match;
+
+  // ==========================================================================
+  // TIER 1: Primary agent-based workflow patterns (highest priority)
+  // ==========================================================================
+
+  // Pattern 1A: Look for "## Workflow" section first, then extract numbered agent steps
+  // Used by: bugfix.md, maintenance.md, migration.md
+  const workflowSection = content.match(/##\s*Workflow[\s\S]*?(?=\n##[^#]|$)/i);
+  if (workflowSection) {
+    // Extract numbered steps with agent names: "1. **agent-name** -> action"
+    const numberedAgentPattern = /^\d+\.\s*\*\*([^*]+)\*\*\s*(?:->|→|:)\s*([^\n]+)/gm;
+    while ((match = numberedAgentPattern.exec(workflowSection[0])) !== null) {
+      const agentName = match[1].trim();
+      const action = match[2].trim();
+      if (trackAgentAction(agentName, action)) {
+        addStep(`${agentName}: ${action}`);
+      }
+    }
+  }
+
+  // Pattern 1B: Standard Flow section (feature.md has this as the main workflow)
+  // Look for "### Standard Flow" which contains the definitive agent sequence
+  const standardFlowMatch = content.match(/###\s*Standard Flow[\s\S]*?(?=\n###|\n##[^#]|$)/i);
+  if (standardFlowMatch) {
+    const flowContent = standardFlowMatch[0];
+    // Match numbered steps like "1. **api-designer** → Design API..."
+    const flowStepPattern = /^\d+\.\s*\*\*([^*]+)\*\*\s*(?:->|→|:)\s*([^\n]+)/gm;
+    while ((match = flowStepPattern.exec(flowContent)) !== null) {
+      const agentName = match[1].trim();
+      const action = match[2].trim();
+      if (trackAgentAction(agentName, action)) {
+        addStep(`${agentName}: ${action}`);
+      }
+    }
+  }
+
+  // ==========================================================================
+  // TIER 2: Fallback patterns for files without numbered agent lists
+  // Only used if no agent-based steps were found (e.g., spot.md)
+  // ==========================================================================
+
+  if (steps.length === 0) {
+    // Pattern 2A: ASCII diagram format "Step N: description" (spot.md)
+    // Matches lines like "Step 1: Select agents (AskUserQuestion with multiSelect)"
+    const asciiStepPattern = /^Step\s+(\d+):\s*([^\n(]+)/gm;
+    while ((match = asciiStepPattern.exec(content)) !== null) {
+      const stepNum = match[1];
+      const description = match[2].trim();
+      // Only add if it's a meaningful step description
+      if (description.length > 3) {
+        addStep(`Step ${stepNum}: ${description}`);
+      }
+    }
+
+    // Pattern 2B: Look for workflow characteristics in code blocks
+    // spot.md uses ASCII diagrams in code blocks to describe the flow
+    const blockMatch = content.match(/```[\s\S]*?```/g);
+    if (blockMatch) {
+      for (const block of blockMatch) {
+        // Look for orchestrator mention
+        if (block.match(/orchestrator/i) && !seenSteps.has('orchestrator: craft implementation plan')) {
+          addStep('orchestrator: Craft implementation plan');
+        }
+        // Look for parallel execution mention
+        if (block.match(/agents?\s+execute\s+in\s+parallel/i)) {
+          addStep('parallel-execution: Selected agents run concurrently');
+        }
+      }
     }
   }
 

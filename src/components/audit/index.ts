@@ -24,6 +24,15 @@ export type { StatCardProps } from './StatCard';
 export { WorkflowDiagram } from './WorkflowDiagram';
 export type { WorkflowDiagramProps, WorkflowData, WorkflowStep } from './WorkflowDiagram';
 
+export { WorkflowPromptWizard } from './WorkflowPromptWizard';
+export type { WorkflowPromptWizardProps } from './WorkflowPromptWizard';
+
+export { CommandLaunchModal } from './CommandLaunchModal';
+export type { CommandLaunchModalProps } from './CommandLaunchModal';
+
+export { WorkflowsClient } from './WorkflowsClient';
+export type { WorkflowsClientProps } from './WorkflowsClient';
+
 // Phase 2: Observability Components
 export { TraceViewer } from './TraceViewer';
 export { TraceList } from './TraceList';

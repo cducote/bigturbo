@@ -152,6 +152,7 @@ export async function updateTrace(payload: UpdateTracePayload): Promise<Langfuse
     metadata: {
       status: payload.status,
       error: payload.error,
+      durationMs: payload.durationMs,
       totalTokens: payload.totalTokens,
       totalCost: payload.totalCost,
       ...payload.metadata,
@@ -169,6 +170,7 @@ export async function updateTrace(payload: UpdateTracePayload): Promise<Langfuse
     input: {},
     output: payload.output,
     error: payload.error,
+    durationMs: payload.durationMs,
     totalTokens: payload.totalTokens,
     totalCost: payload.totalCost,
     metadata: payload.metadata || {},
@@ -179,22 +181,43 @@ export async function updateTrace(payload: UpdateTracePayload): Promise<Langfuse
 
 /**
  * Get a single trace by trace_id.
+ * Fetches both the trace and its observations (spans) via separate API calls.
  */
 export async function getTraceById(traceId: string): Promise<LangfuseTrace | null> {
   try {
-    const response = await fetch(`${LANGFUSE_HOST}/api/public/traces/${traceId}`, {
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`).toString('base64')}`,
-      },
-    });
+    const authHeader = `Basic ${Buffer.from(`${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}`).toString('base64')}`;
 
-    if (!response.ok) {
-      if (response.status === 404) return null;
-      throw new Error(`Failed to fetch trace: ${response.statusText}`);
+    // Fetch trace and observations in parallel
+    const [traceResponse, observationsResponse] = await Promise.all([
+      fetch(`${LANGFUSE_HOST}/api/public/traces/${traceId}`, {
+        headers: { Authorization: authHeader },
+      }),
+      fetch(`${LANGFUSE_HOST}/api/public/observations?traceId=${traceId}`, {
+        headers: { Authorization: authHeader },
+      }),
+    ]);
+
+    if (!traceResponse.ok) {
+      if (traceResponse.status === 404) return null;
+      throw new Error(`Failed to fetch trace: ${traceResponse.statusText}`);
     }
 
-    const data = await response.json();
-    return mapLangfuseTrace(data);
+    const traceData = await traceResponse.json();
+
+    // Parse observations if available
+    let observations: Record<string, unknown>[] = [];
+    if (observationsResponse.ok) {
+      const obsData = await observationsResponse.json();
+      observations = obsData.data || [];
+    }
+
+    // Merge observations into trace data
+    const mergedData = {
+      ...traceData,
+      observations,
+    };
+
+    return mapLangfuseTrace(mergedData);
   } catch (error) {
     console.error('Error fetching trace:', error);
     return null;
@@ -255,6 +278,13 @@ export async function createSpan(payload: CreateSpanPayload): Promise<LangfuseSp
   const client = getClient();
   const spanId = payload.spanId || generateSpanId();
 
+  // Normalize output to object format for Langfuse
+  const output = payload.output
+    ? typeof payload.output === 'string'
+      ? { content: payload.output }
+      : payload.output
+    : undefined;
+
   const trace = client.trace({ id: payload.traceId });
   trace.span({
     id: spanId,
@@ -265,6 +295,7 @@ export async function createSpan(payload: CreateSpanPayload): Promise<LangfuseSp
       ...payload.metadata,
     },
     input: payload.input,
+    output,
   });
 
   await client.flushAsync();
@@ -275,8 +306,9 @@ export async function createSpan(payload: CreateSpanPayload): Promise<LangfuseSp
     name: payload.name,
     operationType: payload.operationType,
     agentName: payload.agentName,
-    status: 'running',
+    status: output ? 'completed' : 'running',
     input: payload.input,
+    output,
     metadata: payload.metadata,
     startedAt: new Date().toISOString(),
   };
@@ -381,7 +413,7 @@ function mapLangfuseTrace(data: Record<string, unknown>): LangfuseTrace {
     input: (data.input || {}) as Record<string, unknown>,
     output: (data.output || undefined) as Record<string, unknown> | undefined,
     error: metadata.error as string,
-    durationMs: data.latency as number,
+    durationMs: (data.latency as number) || (metadata.durationMs as number),
     totalTokens: (data.totalTokens as number) || (metadata.totalTokens as number),
     totalCost: (data.totalCost as number) || (metadata.totalCost as number),
     metadata: metadata,
