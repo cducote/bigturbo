@@ -628,7 +628,6 @@ describe('About Page Integration', () => {
       render(<AboutPage />);
       expect(screen.getByText(/Neon Postgres/i)).toBeInTheDocument();
       expect(screen.getByText(/Clerk Authentication/i)).toBeInTheDocument();
-      expect(screen.getByText(/Stripe Payments/i)).toBeInTheDocument();
     });
 
     it('lists developer experience features', () => {

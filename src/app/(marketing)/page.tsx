@@ -12,7 +12,7 @@ export default function HomePage() {
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
             A modern SaaS starter kit built with Next.js 15, TypeScript, Tailwind CSS,
-            and designed for scalability with Clerk authentication, Stripe payments,
+            and designed for scalability with Clerk authentication
             and Neon Postgres database.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">

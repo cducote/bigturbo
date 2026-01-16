@@ -57,7 +57,7 @@ docs/
 ├── ai/               # Agent system documentation
 │   ├── AGENT_CHARTER.md    # Agent responsibilities & rules
 │   ├── WORKFLOWS.md        # Loop A/B/C/D workflow definitions
-│   ├── CHECKLISTS.md       # Clerk/Stripe/Next.js security checklists
+│   ├── CHECKLISTS.md       # Clerk/Next.js security checklists
 │   └── HANDOFF_TEMPLATE.md # Standard handoff format
 ├── devops/           # Deployment & monitoring docs
 ├── qa/               # Testing documentation
@@ -250,6 +250,6 @@ open http://localhost:3001
 
 - [Agent Charter](docs/ai/AGENT_CHARTER.md) — Agent responsibilities and escalation rules
 - [Workflows](docs/ai/WORKFLOWS.md) — Loop A/B/C/D definitions
-- [Checklists](docs/ai/CHECKLISTS.md) — Clerk/Stripe/Next.js security checklists
+- [Checklists](docs/ai/CHECKLISTS.md) — Clerk/Next.js security checklists
 - [Tracing](docs/tracing.md) — How automatic command tracing works
 - [Deployment](docs/devops/DEPLOYMENT_GUIDE.md) — Deployment procedures

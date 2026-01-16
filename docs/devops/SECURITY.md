@@ -195,11 +195,6 @@ const envSchema = z.object({
   // NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
   // CLERK_SECRET_KEY: z.string().min(1),
   // CLERK_WEBHOOK_SECRET: z.string().optional(),
-
-  // Future: Payments (uncomment when integrated)
-  // NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().min(1),
-  // STRIPE_SECRET_KEY: z.string().min(1),
-  // STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 // Refine schema for production-specific requirements
@@ -493,22 +488,6 @@ response.cookies.set('session', token, {
 - [ ] Set up session timeout
 - [ ] Enable MFA
 - [ ] Configure OAuth providers
-
----
-
-## Payment Security (Future)
-
-### Stripe Integration (Planned)
-
-**Security measures:**
-
-- [ ] Use Stripe.js (no raw card data touches server)
-- [ ] Verify webhook signatures
-- [ ] Implement idempotency keys
-- [ ] Use SCA-compliant flow
-- [ ] Log all payment attempts
-- [ ] Implement fraud detection
-- [ ] PCI DSS compliance (via Stripe)
 
 ---
 

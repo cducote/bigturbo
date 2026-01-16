@@ -444,11 +444,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 # CLERK_SECRET_KEY=
 # CLERK_WEBHOOK_SECRET=
-
-# Payments (Stripe) - to be configured later
-# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-# STRIPE_SECRET_KEY=
-# STRIPE_WEBHOOK_SECRET=
 ```
 
 ### .env.local (Development)
@@ -524,7 +519,6 @@ declare global {
       NEXT_PUBLIC_SENTRY_DSN?: string;
       DATABASE_URL?: string;
       CLERK_SECRET_KEY?: string;
-      STRIPE_SECRET_KEY?: string;
     }
   }
 }

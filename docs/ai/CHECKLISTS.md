@@ -1,6 +1,6 @@
 # Project Checklists
 
-Stack-specific checklists for Clerk, Stripe, and Next.js to catch common issues.
+Stack-specific checklists for Clerk and Next.js to catch common issues.
 
 ---
 

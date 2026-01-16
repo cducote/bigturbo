@@ -6,7 +6,7 @@ This document defines how the 10 Claude Code subagents are used in this project.
 
 | Agent | Primary Responsibility |
 |-------|----------------------|
-| **fullstack-developer** | Implements end-to-end features (Next.js + Clerk + Stripe + Postgres) |
+| **fullstack-developer** | Implements end-to-end features (Next.js + Clerk + Postgres) |
 | **api-designer** | API contracts, server actions/route handlers shapes, error models |
 | **sql-pro** | Migrations, indexes, query performance, data fixes |
 | **code-reviewer** | Correctness, maintainability, architecture smells |

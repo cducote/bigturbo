@@ -86,7 +86,7 @@ Done means:
 ## 7. Security Checklist
 
 - [ ] **Tenant isolation** — Data is scoped to the correct org/user
-- [ ] **Webhook signature verification** — Stripe webhooks verify signature
+- [ ] **Webhook signature verification** — Webhooks verify signature
 - [ ] **Authorization checks** — Server-side authz (not just client)
 - [ ] **Input validation** — All inputs validated/sanitized
 - [ ] **PII handling** — Sensitive data handled appropriately

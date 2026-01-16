@@ -40,7 +40,6 @@ export default function AboutPage() {
                 <li>Next.js API Routes & Server Actions</li>
                 <li>Neon Postgres Database</li>
                 <li>Clerk Authentication</li>
-                <li>Stripe Payments</li>
               </ul>
             </div>
 

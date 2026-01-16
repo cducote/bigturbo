@@ -1,6 +1,6 @@
 # BigTurbo — Multi-Agent SaaS Workflow
 
-A structured multi-agent workflow system for building SaaS applications with **Next.js**, **Neon/Postgres**, **Stripe**, and **Clerk**.
+A structured multi-agent workflow system for building SaaS applications with **Next.js**, **Neon/Postgres**, and **Clerk**.
 
 ## What is this?
 

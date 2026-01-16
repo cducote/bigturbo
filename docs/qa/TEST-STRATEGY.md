@@ -67,7 +67,6 @@ This test strategy defines the comprehensive quality assurance approach for the 
 ### Out of Scope for MVP
 - Authentication (Clerk integration - future)
 - Database operations (Neon Postgres - future)
-- Payment processing (Stripe - future)
 - User management features
 - Complex user workflows
 

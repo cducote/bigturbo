@@ -217,9 +217,6 @@ SENTRY_AUTH_TOKEN=your_sentry_auth_token
 # DATABASE_URL=
 # NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 # CLERK_SECRET_KEY=
-# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-# STRIPE_SECRET_KEY=
-# STRIPE_WEBHOOK_SECRET=
 ```
 
 ### Environment Validation
@@ -624,7 +621,6 @@ After successful deployment, update:
 2. **Feature development**
    - Authentication (Clerk)
    - Database integration (Neon)
-   - Payment processing (Stripe)
 
 3. **Scaling**
    - Load testing

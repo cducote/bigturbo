@@ -10,8 +10,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'BigTurbo - Next.js SaaS Starter',
-  description: 'A modern SaaS starter built with Next.js, Clerk, Stripe, and Neon Postgres',
-  keywords: ['nextjs', 'saas', 'stripe', 'clerk', 'postgres'],
+  description: 'A modern SaaS starter built with Next.js, Clerk, and Neon Postgres',
+  keywords: ['nextjs', 'saas', 'clerk', 'postgres'],
   authors: [{ name: 'BigTurbo Team' }],
   creator: 'BigTurbo',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: '/',
     title: 'BigTurbo - Next.js SaaS Starter',
-    description: 'A modern SaaS starter built with Next.js, Clerk, Stripe, and Neon Postgres',
+    description: 'A modern SaaS starter built with Next.js, Clerk, and Neon Postgres',
     siteName: 'BigTurbo',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'BigTurbo - Next.js SaaS Starter',
-    description: 'A modern SaaS starter built with Next.js, Clerk, Stripe, and Neon Postgres',
+    description: 'A modern SaaS starter built with Next.js, Clerk, and Neon Postgres',
   },
 };
 
