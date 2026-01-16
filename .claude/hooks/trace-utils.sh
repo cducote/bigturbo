@@ -32,18 +32,28 @@ create_trace() {
     local COMMAND_NAME="$1"
     local PROMPT="$2"
     local AGENTS="${3:-}"
+    local PRIMARY_AGENT="${4:-}"  # New param for the primary agent
+    
+    # Determine agentName: use primary agent if provided, otherwise first from agents list, else "command"
+    local AGENT_NAME="command"
+    if [ -n "$PRIMARY_AGENT" ]; then
+        AGENT_NAME="$PRIMARY_AGENT"
+    elif [ -n "$AGENTS" ]; then
+        AGENT_NAME=$(echo "$AGENTS" | cut -d',' -f1)
+    fi
 
     local PAYLOAD
     if [ -n "$AGENTS" ]; then
         PAYLOAD=$(jq -n \
             --arg cmd "$COMMAND_NAME" \
             --arg prompt "$PROMPT" \
+            --arg agentName "$AGENT_NAME" \
             --arg agents "$AGENTS" \
             '{
                 type: "trace.create",
                 payload: {
                     name: ("/" + $cmd),
-                    agentName: "command",
+                    agentName: $agentName,
                     commandName: $cmd,
                     input: { prompt: $prompt },
                     metadata: { agents: ($agents | split(",")) }
@@ -53,11 +63,12 @@ create_trace() {
         PAYLOAD=$(jq -n \
             --arg cmd "$COMMAND_NAME" \
             --arg prompt "$PROMPT" \
+            --arg agentName "$AGENT_NAME" \
             '{
                 type: "trace.create",
                 payload: {
                     name: ("/" + $cmd),
-                    agentName: "command",
+                    agentName: $agentName,
                     commandName: $cmd,
                     input: { prompt: $prompt }
                 }

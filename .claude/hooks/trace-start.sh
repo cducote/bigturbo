@@ -57,8 +57,8 @@ if [[ "$PROMPT" =~ ^/([a-zA-Z0-9_-]+) ]]; then
     # Detect agents involved in this command
     DETECTED_AGENTS=$(detect_agents "$COMMAND_NAME")
 
-    # Create trace with agent info
-    TRACE_ID=$(create_trace "$COMMAND_NAME" "$PROMPT" "$DETECTED_AGENTS")
+    # Create trace with agent info - pass PROMPT_AGENT as primary agent
+    TRACE_ID=$(create_trace "$COMMAND_NAME" "$PROMPT" "$DETECTED_AGENTS" "$PROMPT_AGENT")
 
     # Store trace ID and metadata for other hooks
     # Use fixed file path since CLAUDE_ENV_FILE is not always available

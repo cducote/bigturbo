@@ -63,6 +63,21 @@ function TraceRow({ trace }: { trace: LangfuseTrace }) {
   const startTime = new Date(trace.startedAt);
   const timeAgo = getTimeAgo(startTime);
 
+  // Determine the display name - prefer a descriptive name over just the command
+  const displayName = trace.name && trace.name !== `/${trace.commandName}` 
+    ? trace.name 
+    : trace.commandName 
+      ? `/${trace.commandName}` 
+      : trace.name || 'Unnamed trace';
+
+  // Only show agent badge if it's a real agent (not "command")
+  const showAgentBadge = trace.agentName && trace.agentName !== 'command';
+
+  // Only show command name if it's different from the display name
+  const showCommandName = trace.commandName && 
+    displayName !== `/${trace.commandName}` && 
+    displayName !== trace.commandName;
+
   return (
     <Link
       href={`/audit/traces/${trace.traceId || trace.id}`}
@@ -71,18 +86,18 @@ function TraceRow({ trace }: { trace: LangfuseTrace }) {
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate font-medium text-[#0f172a]">{trace.name}</span>
+            <span className="truncate font-medium text-[#0f172a]">{displayName}</span>
             <StatusBadge status={trace.status} />
           </div>
           <div className="mt-1 flex items-center gap-3 text-xs text-[#64748b]">
             <span className="truncate">{trace.traceId}</span>
-            {trace.agentName && (
+            {showAgentBadge && (
               <>
                 <span>{'\u2022'}</span>
-                <AgentBadge agentId={trace.agentName} />
+                <AgentBadge agentId={trace.agentName!} />
               </>
             )}
-            {trace.commandName && (
+            {showCommandName && (
               <>
                 <span>{'\u2022'}</span>
                 <span>/{trace.commandName}</span>
