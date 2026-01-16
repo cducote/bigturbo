@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import { agentPrismTailwindColors } from './src/components/agent-prism/theme';
 
 const config: Config = {
   content: [
@@ -9,6 +10,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        ...agentPrismTailwindColors,
         background: 'var(--background)',
         foreground: 'var(--foreground)',
 

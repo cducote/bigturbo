@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { href: '/audit/agents', label: 'Agents' },
   { href: '/audit/workflows', label: 'Workflows' },
   { href: '/audit/traces', label: 'Traces' },
+  { href: '/audit/prism', label: 'Prism' },
   { href: '/audit/metrics', label: 'Metrics' },
   { href: '/audit/prompts', label: 'Prompts' },
 ];
